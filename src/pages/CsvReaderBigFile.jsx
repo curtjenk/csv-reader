@@ -1,15 +1,21 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useState } from "react";
 import { useCSVReader } from "react-papaparse";
 import { Virtuoso } from "react-virtuoso";
-import convertToYup from "json-schema-yup-transformer";
-import MyCsvFileSchema from "../file_schemas/MyCsvFileSchema";
+import convertToYup from "json-schema-yup-transformer/dist/index.js";
+import {
+  MyCsvFileSchema,
+  MyCsvFileSchemaMessages,
+} from "../file_schemas/MyCsvFileSchema";
 
 const styles = {
   csvReader: {
     display: "flex",
     flexDirection: "row",
+    marginTop: 10,
+    marginRight: 20,
     marginBottom: 10,
+    marginLeft: 20,
   },
   browseFile: {
     width: "20%",
@@ -43,6 +49,10 @@ export default function CSVReaderBigFile() {
   const [visible, setVisible] = React.useState(true);
   const [validationErrors, setValidationErrors] = useState([]);
 
+  useEffect(() => {
+    validationErrors.forEach((e) => console.log(e));
+  }, [validationErrors]);
+
   const showTable = (results) => {
     const [headers, ...data] = results.data;
     setHeaders(headers);
@@ -51,9 +61,8 @@ export default function CSVReaderBigFile() {
 
   const validate = async () => {
     if (validateHeaders()) {
-      await validateData();
+      validateData();
     }
-    validationErrors.forEach((e) => console.log(e));
   };
 
   const validateHeaders = () => {
@@ -75,19 +84,21 @@ export default function CSVReaderBigFile() {
     return true;
   };
 
-  const validateData = async () => {
+  const validateData = () => {
     const dataErrors = [];
-    const yupschema = convertToYup(MyCsvFileSchema);
+    const yupschema = convertToYup(MyCsvFileSchema, MyCsvFileSchemaMessages);
     for (let i = 0; i < rows.length; i++) {
       if (dataErrors.length > maxErrors) break;
-      await yupschema
-        .validate(convertRowToJson(rows[i]), { abortEarly: false })
-        .catch((error) => {
-          dataErrors.push(`${i}:${error.errors.join(" ,")}`);
+      try {
+        yupschema.validateSync(convertRowToJson(rows[i]), {
+          abortEarly: false,
         });
+      } catch (error) {
+        dataErrors.push(`${i}:${error.errors.join("; ")}`);
+      }
     }
-    setValidationErrors([...validationErrors, ...dataErrors]);
     console.log("done");
+    setValidationErrors([...validationErrors, ...dataErrors]);
   };
 
   const convertRowToJson = (row) => {

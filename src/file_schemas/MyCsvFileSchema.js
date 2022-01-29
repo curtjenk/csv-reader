@@ -1,7 +1,10 @@
 // yyyy-mm-dd hh:mi
 const datePartialTimeRegex =
   "^((19|20)[0-9]{2})-((0|1)[0-9])-((0|1|2|3)[0-9]) ([0-9]{2}):([0-9]{2})$";
+// 55555 or 555554444 or 55555-4444
+const zip5Plus4Regex = "(^[0-9]{5}$)|(^[0-9]{9}$)|(^[0-9]{5}-[0-9]{4}$)";
 
+// "order" is not part of the draft-07 spec
 const MyCsvFileSchema = {
   type: "object",
   $schema: "http://json-schema.org/draft-07/schema#",
@@ -18,6 +21,7 @@ const MyCsvFileSchema = {
       format: "email",
     },
     "Address Zip": {
+      type: "string",
       order: 7,
       oneOf: [
         {
@@ -26,8 +30,7 @@ const MyCsvFileSchema = {
         },
         {
           type: "string",
-          minLength: 5,
-          maxLength: 5,
+          pattern: zip5Plus4Regex,
         },
       ],
     },
@@ -40,4 +43,13 @@ const MyCsvFileSchema = {
   required: ["First Name", "Email"],
 };
 
-export default MyCsvFileSchema;
+// Custom error messages
+const MyCsvFileSchemaMessages = {
+  errors: {
+    "Address Zip": {
+      oneOf: "Address Zip must be Zip5 or Zip9 or Zip5-Zip4",
+    },
+  },
+};
+
+export { MyCsvFileSchema, MyCsvFileSchemaMessages };
