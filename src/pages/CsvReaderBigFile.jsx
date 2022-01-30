@@ -2,20 +2,23 @@ import React, { useEffect, useMemo } from "react";
 import { useState } from "react";
 import { useCSVReader } from "react-papaparse";
 import { Virtuoso } from "react-virtuoso";
-import convertToYup from "json-schema-yup-transformer/dist/index.js";
+import convertToYup from "json-schema-yup-transformer";
+import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner";
 import {
   MyCsvFileSchema,
   MyCsvFileSchemaMessages,
 } from "../file_schemas/MyCsvFileSchema";
+import { useStateWithCallback } from "../customHooks/useStateWithCallBack.hook";
 
 const styles = {
   csvReader: {
     display: "flex",
     flexDirection: "row",
     marginTop: 10,
-    marginRight: 20,
+    marginRight: 40,
     marginBottom: 10,
-    marginLeft: 20,
+    marginLeft: 40,
   },
   browseFile: {
     width: "20%",
@@ -48,6 +51,7 @@ export default function CSVReaderBigFile() {
   const ref = React.useRef(null);
   const [visible, setVisible] = React.useState(true);
   const [validationErrors, setValidationErrors] = useState([]);
+  const [validating, setValidating] = useStateWithCallback(false, 10);
 
   useEffect(() => {
     validationErrors.forEach((e) => console.log(e));
@@ -60,11 +64,17 @@ export default function CSVReaderBigFile() {
   };
 
   const validate = async () => {
-    if (validateHeaders()) {
-      validateData();
-    }
+    console.log("begin validation");
+    setValidating(true, validateFlow);
   };
 
+  const validateFlow = async () => {
+    if (validateHeaders()) {
+      await validateData();
+    }
+    setValidating(false);
+    console.log("end validation");
+  };
   const validateHeaders = () => {
     const headerErrors = [];
     const { properties } = MyCsvFileSchema;
@@ -84,13 +94,13 @@ export default function CSVReaderBigFile() {
     return true;
   };
 
-  const validateData = () => {
+  const validateData = async () => {
     const dataErrors = [];
     const yupschema = convertToYup(MyCsvFileSchema, MyCsvFileSchemaMessages);
     for (let i = 0; i < rows.length; i++) {
       if (dataErrors.length > maxErrors) break;
       try {
-        yupschema.validateSync(convertRowToJson(rows[i]), {
+        await yupschema.validate(convertRowToJson(rows[i]), {
           abortEarly: false,
         });
       } catch (error) {
@@ -145,12 +155,26 @@ export default function CSVReaderBigFile() {
         }}
       >
         <div>
-          <button onClick={() => validate()}>Validate</button>
-          <input
-            // value={rowNum > 0 ? rowNum : null}
-            onChange={(e) => setRowNum(e.target.value)}
-          />
-
+          <Button
+            variant="primary"
+            disabled={validating}
+            onClick={() => validate()}
+          >
+            {validating && (
+              <Spinner
+                as="span"
+                animation="grow"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            )}
+            Validate
+          </Button>
+          {/* <div>
+            <button onClick={() => validate()}>Validate</button>
+          </div> */}
+          <input onChange={(e) => setRowNum(e.target.value)} />
           <button
             onClick={() =>
               ref.current.scrollToIndex({ index: rowNum, align: "start" })
@@ -158,7 +182,6 @@ export default function CSVReaderBigFile() {
           >
             Go
           </button>
-
           <button onClick={() => setVisible(!visible)}>
             {visible ? "Hide" : "Show"}
           </button>

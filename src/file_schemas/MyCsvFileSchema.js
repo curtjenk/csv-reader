@@ -47,7 +47,7 @@ const MyCsvFileSchema = {
 const MyCsvFileSchemaMessages = {
   errors: {
     "Address Zip": {
-      oneOf: "Address Zip must be Zip5 or Zip9 or Zip5-Zip4",
+      oneOf: "Address Zip must be Zip5/Zip9/Zip5-Zip4",
     },
   },
 };
