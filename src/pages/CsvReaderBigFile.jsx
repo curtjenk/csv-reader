@@ -5,6 +5,8 @@ import { Virtuoso } from "react-virtuoso";
 import convertToYup from "json-schema-yup-transformer";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
+import { Container, Row, Col, InputGroup, FormControl } from "react-bootstrap";
+
 import {
   MyCsvFileSchema,
   MyCsvFileSchemaMessages,
@@ -49,6 +51,7 @@ export default function CSVReaderBigFile() {
   const [rows, setRows] = useState([]);
   const [rowNum, setRowNum] = useState(-1);
   const ref = React.useRef(null);
+  const errorsRef = React.useRef(null);
   const [visible, setVisible] = React.useState(true);
   const [validationErrors, setValidationErrors] = useState([]);
   const [validating, setValidating] = useStateWithCallback(false, 10);
@@ -104,7 +107,8 @@ export default function CSVReaderBigFile() {
           abortEarly: false,
         });
       } catch (error) {
-        dataErrors.push(`${i}:${error.errors.join("; ")}`);
+        dataErrors.push([i, error.errors.join("; ")]);
+        // dataErrors.push([i, `${i}:${error.errors.join("; ")}`]);
       }
     }
     console.log("done");
@@ -146,51 +150,118 @@ export default function CSVReaderBigFile() {
           </>
         )}
       </CSVReader>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          // width: "100%",
-          justifyContent: "center",
-        }}
-      >
-        <div>
-          <Button
-            variant="primary"
-            disabled={validating}
-            onClick={() => validate()}
-          >
-            {validating && (
-              <Spinner
-                as="span"
-                animation="grow"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-              />
-            )}
-            Validate
-          </Button>
-          {/* <div>
-            <button onClick={() => validate()}>Validate</button>
-          </div> */}
-          <input onChange={(e) => setRowNum(e.target.value)} />
-          <button
-            onClick={() =>
-              ref.current.scrollToIndex({ index: rowNum, align: "start" })
-            }
-          >
-            Go
-          </button>
-          <button onClick={() => setVisible(!visible)}>
-            {visible ? "Hide" : "Show"}
-          </button>
-        </div>
-      </div>
+      <Container>
+        <Row>
+          <Col md={2}>
+            <Row>
+              <Button
+                variant="primary"
+                disabled={validating}
+                onClick={() => validate()}
+              >
+                {validating && (
+                  <Spinner
+                    as="span"
+                    animation="grow"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                )}
+                Validate
+              </Button>
+            </Row>
+            <Row>
+              <Col>
+                <InputGroup onChange={(e) => setRowNum(e.target.value)}>
+                  <FormControl />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() =>
+                      ref.current.scrollToIndex({
+                        index: rowNum,
+                        align: "start",
+                      })
+                    }
+                  >
+                    Go
+                  </Button>
+                </InputGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={2}>
+                <Button onClick={() => setVisible(!visible)}>
+                  {visible ? "Hide" : "Show"}
+                </Button>
+              </Col>
+            </Row>
+          </Col>
+          <Col>
+            <Virtuoso
+              ref={errorsRef}
+              style={{ height: 200 }}
+              totalCount={validationErrors.length}
+              components={{
+                List: React.forwardRef(({ children, style }, errorsRef) => {
+                  return (
+                    <table
+                      style={{
+                        "--virtuosoPaddingTop": (style?.paddingTop ?? 0) + "px",
+                        "--virtuosoPaddingBottom":
+                          (style?.paddingBottom ?? 0) + "px",
+                      }}
+                    >
+                      <thead>
+                        <tr>
+                          <th>Row</th>
+                          <th>Error(s)</th>
+                        </tr>
+                      </thead>
+                      <tbody ref={errorsRef}>{children}</tbody>
+                    </table>
+                  );
+                }),
+                Item: useMemo(
+                  () => (props) => {
+                    const row = validationErrors[props["data-index"]];
+                    return (
+                      <tr {...props}>
+                        <td
+                          onClick={() =>
+                            ref.current.scrollToIndex({
+                              index: row[0],
+                              align: "start",
+                            })
+                          }
+                        >
+                          {row[0]}
+                        </td>
+                        <td
+                          onClick={() =>
+                            ref.current.scrollToIndex({
+                              index: row[0],
+                              align: "start",
+                            })
+                          }
+                        >
+                          {row[1]}
+                        </td>
+                      </tr>
+                    );
+                  },
+                  [validationErrors]
+                ),
+              }}
+            />
+          </Col>
+        </Row>
+      </Container>
+      {/* Data below */}
       <div style={{ margin: "20px" }}>
         <Virtuoso
           ref={ref}
-          style={{ height: 400, display: visible ? "block" : "none" }}
+          style={{ height: 405, display: visible ? "block" : "none" }}
           totalCount={rows.length}
           components={{
             List: React.forwardRef(({ children, style }, ref) => {
@@ -217,7 +288,6 @@ export default function CSVReaderBigFile() {
             Item: useMemo(
               () => (props) => {
                 const row = rows[props["data-index"]];
-
                 return (
                   <tr {...props}>
                     <td>{props["data-index"]}</td>
