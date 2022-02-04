@@ -13,6 +13,8 @@ import {
 } from "../file_schemas/MyCsvFileSchema";
 import { useStateWithCallback } from "../customHooks/useStateWithCallBack.hook";
 
+import Schemas from "../file_schemas/Schemas";
+
 const styles = {
   csvReader: {
     display: "flex",
@@ -23,15 +25,15 @@ const styles = {
     marginLeft: 40,
   },
   browseFile: {
-    width: "20%",
+    width: "15%",
     backgroundColor: "red",
   },
   acceptedFile: {
     border: "1px solid #ccc",
-    height: 45,
-    lineHeight: 2.5,
+    height: 30,
+    lineHeight: 1.5,
     paddingLeft: 10,
-    width: "80%",
+    width: "60%",
   },
   remove: {
     borderRadius: 0,
@@ -55,6 +57,10 @@ export default function CSVReaderBigFile() {
   const [visible, setVisible] = React.useState(true);
   const [validationErrors, setValidationErrors] = useState([]);
   const [validating, setValidating] = useStateWithCallback(false, 10);
+
+  console.log(Schemas);
+  console.log(Schemas[0].schema.title);
+  console.log(Schemas[1].schema.title);
 
   useEffect(() => {
     validationErrors.forEach((e) => console.log(e));
