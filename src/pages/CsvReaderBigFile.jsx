@@ -163,6 +163,7 @@ export default function CSVReaderBigFile() {
         </Row>
       </Container>
       <div style={{ margin: "15px" }}>
+        {rows.length > 0 && <h6>File contains {rows.length} rows</h6>}
         <VirtualDataTable ref={ref} headers={headers} rows={rows} />
       </div>
     </>
