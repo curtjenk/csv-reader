@@ -6,7 +6,7 @@ export const useStateWithCallback = (initialState, delayMs) => {
   const callbackRef = useRef();
 
   const handleSetState = async (updatedState, callback) => {
-    console.log("handleStateUpdate");
+    // console.log("handleStateUpdate");
     callbackRef.current = callback;
     setState(updatedState);
   };
@@ -14,14 +14,14 @@ export const useStateWithCallback = (initialState, delayMs) => {
   useEffect(() => {
     async function doit() {
       if (typeof delayMs === "number") {
-        console.log(`delaying ${delayMs} milliseconds`);
+        // console.log(`delaying ${delayMs} milliseconds`);
         await Delay(delayMs);
       }
       callbackRef.current(state);
       callbackRef.current = undefined;
     }
     if (typeof callbackRef.current === "function") {
-      console.log("calling the callback function");
+      // console.log("calling the callback function");
       doit();
     }
   }, [state, delayMs]);

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useCSVReader } from "react-papaparse";
 import { Virtuoso } from "react-virtuoso";
 import convertToYup from "json-schema-yup-transformer";
+import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
 import { Container, Row, Col, InputGroup, FormControl } from "react-bootstrap";
@@ -13,7 +14,7 @@ import {
 } from "../file_schemas/MyCsvFileSchema";
 import { useStateWithCallback } from "../customHooks/useStateWithCallBack.hook";
 
-import Schemas from "../file_schemas/Schemas";
+import { Schemas, SchemasIndex } from "../file_schemas/Schemas";
 
 const styles = {
   csvReader: {
@@ -55,16 +56,13 @@ export default function CSVReaderBigFile() {
   const ref = React.useRef(null);
   const errorsRef = React.useRef(null);
   const [visible, setVisible] = React.useState(true);
+  const [selSchemaNdx, setselSchemaNdx] = useState("-1");
   const [validationErrors, setValidationErrors] = useState([]);
   const [validating, setValidating] = useStateWithCallback(false, 10);
 
-  console.log(Schemas);
-  console.log(Schemas[0].schema.title);
-  console.log(Schemas[1].schema.title);
-
-  useEffect(() => {
-    validationErrors.forEach((e) => console.log(e));
-  }, [validationErrors]);
+  // useEffect(() => {
+  //   validationErrors.forEach((e) => console.log(e));
+  // }, [validationErrors]);
 
   const showTable = (results) => {
     const [headers, ...data] = results.data;
@@ -73,7 +71,6 @@ export default function CSVReaderBigFile() {
   };
 
   const validate = async () => {
-    console.log("begin validation");
     setValidating(true, validateFlow);
   };
 
@@ -82,7 +79,6 @@ export default function CSVReaderBigFile() {
       await validateData();
     }
     setValidating(false);
-    console.log("end validation");
   };
   const validateHeaders = () => {
     const headerErrors = [];
@@ -105,7 +101,10 @@ export default function CSVReaderBigFile() {
 
   const validateData = async () => {
     const dataErrors = [];
-    const yupschema = convertToYup(MyCsvFileSchema, MyCsvFileSchemaMessages);
+    const yupschema = convertToYup(
+      Schemas[selSchemaNdx].schema,
+      Schemas[selSchemaNdx].messages
+    );
     for (let i = 0; i < rows.length; i++) {
       if (dataErrors.length > maxErrors) break;
       try {
@@ -114,10 +113,8 @@ export default function CSVReaderBigFile() {
         });
       } catch (error) {
         dataErrors.push([i, error.errors.join("; ")]);
-        // dataErrors.push([i, `${i}:${error.errors.join("; ")}`]);
       }
     }
-    console.log("done");
     setValidationErrors([...validationErrors, ...dataErrors]);
   };
 
@@ -158,11 +155,31 @@ export default function CSVReaderBigFile() {
       </CSVReader>
       <Container>
         <Row>
+          <Col md={4}>
+            <Form.Select
+              aria-label="Select File/Schema Type"
+              onChange={(event) => setselSchemaNdx(event.target.value)}
+            >
+              <option key="-1" value="-1">
+                Select File Type
+              </option>
+              {SchemasIndex.map((s) => (
+                <option key={s.ndx} value={s.ndx}>
+                  {s.title}
+                </option>
+              ))}
+            </Form.Select>
+            <br />
+          </Col>
+        </Row>
+        <Row>
           <Col md={2}>
             <Row>
               <Button
                 variant="primary"
-                disabled={validating}
+                disabled={
+                  validating || rows.length === 0 || selSchemaNdx === "-1"
+                }
                 onClick={() => validate()}
               >
                 {validating && (
@@ -177,31 +194,32 @@ export default function CSVReaderBigFile() {
                 Validate
               </Button>
             </Row>
-            <Row>
-              <Col>
-                <InputGroup onChange={(e) => setRowNum(e.target.value)}>
-                  <FormControl />
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() =>
-                      ref.current.scrollToIndex({
-                        index: rowNum,
-                        align: "start",
-                      })
-                    }
-                  >
-                    Go
-                  </Button>
-                </InputGroup>
-              </Col>
+            <Row className="mt-1">
+              <InputGroup
+                className="p-0"
+                onChange={(e) => setRowNum(e.target.value)}
+              >
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    ref.current.scrollToIndex({
+                      index: rowNum,
+                      align: "start",
+                    })
+                  }
+                >
+                  Go To
+                </Button>
+                <FormControl />
+              </InputGroup>
             </Row>
-            <Row>
+            {/* <Row>
               <Col md={2}>
                 <Button onClick={() => setVisible(!visible)}>
                   {visible ? "Hide" : "Show"}
                 </Button>
               </Col>
-            </Row>
+            </Row> */}
           </Col>
           <Col>
             <Virtuoso
@@ -267,7 +285,8 @@ export default function CSVReaderBigFile() {
       <div style={{ margin: "20px" }}>
         <Virtuoso
           ref={ref}
-          style={{ height: 405, display: visible ? "block" : "none" }}
+          style={{ height: 405 }}
+          // style={{ height: 405, display: visible ? "block" : "none" }}
           totalCount={rows.length}
           components={{
             List: React.forwardRef(({ children, style }, ref) => {
@@ -281,7 +300,7 @@ export default function CSVReaderBigFile() {
                 >
                   <thead>
                     <tr>
-                      <th>#</th>
+                      <th>Row</th>
                       {headers.map((col, index) => (
                         <th key={index}>{col}</th>
                       ))}
