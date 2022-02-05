@@ -5,11 +5,11 @@ const datePartialTimeRegex =
 const zip5Plus4Regex = "(^[0-9]{5}$)|(^[0-9]{9}$)|(^[0-9]{5}-[0-9]{4}$)";
 
 // "order" is not part of the draft-07 spec
-const MyCsvFileSchema = {
+const BulkUploadSchema = {
   type: "object",
   $schema: "http://json-schema.org/draft-07/schema#",
-  $id: "MyCsvFileSchema",
-  title: "Defines MyCsvFile layout",
+  $id: "BulkUpload",
+  title: "Bulk/Manual Load",
   properties: {
     "First Name": {
       type: "string",
@@ -44,7 +44,7 @@ const MyCsvFileSchema = {
 };
 
 // Custom error messages
-const MyCsvFileSchemaMessages = {
+const BulkUploadSchemaMessages = {
   errors: {
     "Address Zip": {
       oneOf: "Address Zip must be Zip5/Zip9/Zip5-Zip4",
@@ -52,4 +52,4 @@ const MyCsvFileSchemaMessages = {
   },
 };
 
-export { MyCsvFileSchema, MyCsvFileSchemaMessages };
+export { BulkUploadSchema, BulkUploadSchemaMessages };

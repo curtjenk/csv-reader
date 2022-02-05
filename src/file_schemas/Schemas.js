@@ -1,17 +1,17 @@
-import { MyCsvFileSchema, MyCsvFileSchemaMessages } from "./MyCsvFileSchema";
+import { BulkUploadSchema, BulkUploadSchemaMessages } from "./BulkUploadSchema";
 import {
-  MyOtherCsvFileSchema,
-  MyOtherCsvFileSchemaMessages,
-} from "./MyOtherCsvFileSchema";
+  OperatorLookupSchema,
+  OperatorLookupSchemaMessages,
+} from "./OperatorLookupSchema";
 
 // -
 // Collect all schemas here
 // -
 const Schemas = [];
-Schemas.push({ schema: MyCsvFileSchema, messages: MyCsvFileSchemaMessages });
+Schemas.push({ schema: BulkUploadSchema, messages: BulkUploadSchemaMessages });
 Schemas.push({
-  schema: MyOtherCsvFileSchema,
-  messages: MyOtherCsvFileSchemaMessages,
+  schema: OperatorLookupSchema,
+  messages: OperatorLookupSchemaMessages,
 });
 
 const SchemasIndex = Schemas.map((s, ndx) => {

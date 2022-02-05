@@ -1,73 +1,34 @@
-import React, { useEffect, useMemo } from "react";
+import React from "react";
 import { useState } from "react";
-import { useCSVReader } from "react-papaparse";
-import { Virtuoso } from "react-virtuoso";
 import convertToYup from "json-schema-yup-transformer";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
 import { Container, Row, Col, InputGroup, FormControl } from "react-bootstrap";
 
-import {
-  MyCsvFileSchema,
-  MyCsvFileSchemaMessages,
-} from "../file_schemas/MyCsvFileSchema";
 import { useStateWithCallback } from "../customHooks/useStateWithCallBack.hook";
-
 import { Schemas, SchemasIndex } from "../file_schemas/Schemas";
-
-const styles = {
-  csvReader: {
-    display: "flex",
-    flexDirection: "row",
-    marginTop: 10,
-    marginRight: 40,
-    marginBottom: 10,
-    marginLeft: 40,
-  },
-  browseFile: {
-    width: "15%",
-    backgroundColor: "red",
-  },
-  acceptedFile: {
-    border: "1px solid #ccc",
-    height: 30,
-    lineHeight: 1.5,
-    paddingLeft: 10,
-    width: "60%",
-  },
-  remove: {
-    borderRadius: 0,
-    padding: "0 20px",
-    backgroundColor: "red",
-  },
-  progressBarBackgroundColor: {
-    backgroundColor: "red",
-  },
-};
+import GenericCsvReader from "../components/GenericCsvReader";
+import VirtualDataTable from "../components/VirtualDataTable";
+import VirtualErrorsTable from "../components/VirtualErrorsTable";
 
 const maxErrors = 1000;
 
 export default function CSVReaderBigFile() {
-  const { CSVReader } = useCSVReader();
   const [headers, setHeaders] = useState([]);
   const [rows, setRows] = useState([]);
   const [rowNum, setRowNum] = useState(-1);
   const ref = React.useRef(null);
   const errorsRef = React.useRef(null);
-  const [visible, setVisible] = React.useState(true);
   const [selSchemaNdx, setselSchemaNdx] = useState("-1");
   const [validationErrors, setValidationErrors] = useState([]);
   const [validating, setValidating] = useStateWithCallback(false, 10);
 
-  // useEffect(() => {
-  //   validationErrors.forEach((e) => console.log(e));
-  // }, [validationErrors]);
-
-  const showTable = (results) => {
+  const getCsvData = (results) => {
     const [headers, ...data] = results.data;
     setHeaders(headers);
     setRows(data);
+    setValidationErrors([]);
   };
 
   const validate = async () => {
@@ -82,20 +43,20 @@ export default function CSVReaderBigFile() {
   };
   const validateHeaders = () => {
     const headerErrors = [];
-    const { properties } = MyCsvFileSchema;
+    const { properties } = Schemas[selSchemaNdx].schema;
     Object.keys(properties).forEach((key) => {
       const prop = properties[key];
       const ndx = headers.findIndex((el) => el === key);
       if (ndx === -1) {
-        headerErrors.push(`${key}: Missing`);
+        headerErrors.push([key, "Missing"]);
       } else if (prop.order !== ndx) {
-        headerErrors.push(`${key}: Expected at ${prop.order} Found at ${ndx}`);
+        headerErrors.push([key, `Expected at ${prop.order} Found at ${ndx}`]);
       }
     });
+    setValidationErrors(headerErrors);
     if (headerErrors.length > 0) {
       return false;
     }
-    setValidationErrors(headerErrors);
     return true;
   };
 
@@ -128,40 +89,18 @@ export default function CSVReaderBigFile() {
 
   return (
     <>
-      <CSVReader
-        config={{ header: false }}
-        onUploadAccepted={(results) => showTable(results)}
-      >
-        {({ getRootProps, acceptedFile, ProgressBar, getRemoveFileProps }) => (
-          <>
-            <div style={styles.csvReader}>
-              <button
-                type="button"
-                {...getRootProps()}
-                style={styles.browseFile}
-              >
-                Browse file
-              </button>
-              <div style={styles.acceptedFile}>
-                {acceptedFile && acceptedFile.name}
-              </div>
-              <button {...getRemoveFileProps()} style={styles.remove}>
-                Remove
-              </button>
-            </div>
-            <ProgressBar style={styles.progressBarBackgroundColor} />
-          </>
-        )}
-      </CSVReader>
+      <div style={{ marginLeft: "25px" }}>
+        <GenericCsvReader getCsvData={getCsvData} />
+      </div>
       <Container>
         <Row>
-          <Col md={4}>
+          <Col md={4} className="ps-0">
             <Form.Select
               aria-label="Select File/Schema Type"
               onChange={(event) => setselSchemaNdx(event.target.value)}
             >
               <option key="-1" value="-1">
-                Select File Type
+                --Select File Type--
               </option>
               {SchemasIndex.map((s) => (
                 <option key={s.ndx} value={s.ndx}>
@@ -213,119 +152,18 @@ export default function CSVReaderBigFile() {
                 <FormControl />
               </InputGroup>
             </Row>
-            {/* <Row>
-              <Col md={2}>
-                <Button onClick={() => setVisible(!visible)}>
-                  {visible ? "Hide" : "Show"}
-                </Button>
-              </Col>
-            </Row> */}
           </Col>
           <Col>
-            <Virtuoso
+            <VirtualErrorsTable
               ref={errorsRef}
-              style={{ height: 200 }}
-              totalCount={validationErrors.length}
-              components={{
-                List: React.forwardRef(({ children, style }, errorsRef) => {
-                  return (
-                    <table
-                      style={{
-                        "--virtuosoPaddingTop": (style?.paddingTop ?? 0) + "px",
-                        "--virtuosoPaddingBottom":
-                          (style?.paddingBottom ?? 0) + "px",
-                      }}
-                    >
-                      <thead>
-                        <tr>
-                          <th>Row</th>
-                          <th>Error(s)</th>
-                        </tr>
-                      </thead>
-                      <tbody ref={errorsRef}>{children}</tbody>
-                    </table>
-                  );
-                }),
-                Item: useMemo(
-                  () => (props) => {
-                    const row = validationErrors[props["data-index"]];
-                    return (
-                      <tr {...props}>
-                        <td
-                          onClick={() =>
-                            ref.current.scrollToIndex({
-                              index: row[0],
-                              align: "start",
-                            })
-                          }
-                        >
-                          {row[0]}
-                        </td>
-                        <td
-                          onClick={() =>
-                            ref.current.scrollToIndex({
-                              index: row[0],
-                              align: "start",
-                            })
-                          }
-                        >
-                          {row[1]}
-                        </td>
-                      </tr>
-                    );
-                  },
-                  [validationErrors]
-                ),
-              }}
+              dataTableRef={ref}
+              errors={validationErrors}
             />
           </Col>
         </Row>
       </Container>
-      {/* Data below */}
-      <div style={{ margin: "20px" }}>
-        <Virtuoso
-          ref={ref}
-          style={{ height: 405 }}
-          // style={{ height: 405, display: visible ? "block" : "none" }}
-          totalCount={rows.length}
-          components={{
-            List: React.forwardRef(({ children, style }, ref) => {
-              return (
-                <table
-                  style={{
-                    "--virtuosoPaddingTop": (style?.paddingTop ?? 0) + "px",
-                    "--virtuosoPaddingBottom":
-                      (style?.paddingBottom ?? 0) + "px",
-                  }}
-                >
-                  <thead>
-                    <tr>
-                      <th>Row</th>
-                      {headers.map((col, index) => (
-                        <th key={index}>{col}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody ref={ref}>{children}</tbody>
-                </table>
-              );
-            }),
-            Item: useMemo(
-              () => (props) => {
-                const row = rows[props["data-index"]];
-                return (
-                  <tr {...props}>
-                    <td>{props["data-index"]}</td>
-                    {headers.map((col, index) => (
-                      <td key={props["data-index"] + index}>{row[index]}</td>
-                    ))}
-                  </tr>
-                );
-              },
-              [headers, rows]
-            ),
-          }}
-        />
+      <div style={{ margin: "15px" }}>
+        <VirtualDataTable ref={ref} headers={headers} rows={rows} />
       </div>
     </>
   );
