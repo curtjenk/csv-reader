@@ -1,8 +1,4 @@
-// yyyy-mm-dd hh:mi
-const datePartialTimeRegex =
-  "^((19|20)[0-9]{2})-((0|1)[0-9])-((0|1|2|3)[0-9]) ([0-9]{2}):([0-9]{2})$";
-// 55555 or 555554444 or 55555-4444
-const zip5Plus4Regex = "(^[0-9]{5}$)|(^[0-9]{9}$)|(^[0-9]{5}-[0-9]{4}$)";
+import Patterns from "./Patterns";
 
 // "order" is not part of the draft-07 spec
 const OperatorLookupSchema = {
@@ -11,43 +7,96 @@ const OperatorLookupSchema = {
   $id: "OperatorLookup",
   title: "Operator Lookup",
   properties: {
-    // "First Name": {
-    //   type: "string",
-    //   order: 0,
-    // },
-    Email: {
+    MONTHEND_DATE: {
+      type: "string",
+      order: 0,
+      pattern: Patterns.dateMMDDYY_slash,
+    },
+    LOCATION_CODE: {
+      type: "string",
+      order: 1,
+      pattern: Patterns.fiveDigits,
+    },
+    TYPE: {
       type: "string",
       order: 2,
-      format: "email",
-    },
-    "Address Zip": {
-      type: "string",
-      order: 7,
       oneOf: [
         {
           type: "string",
-          maxLength: 0,
+          const: "Company Owned",
         },
         {
           type: "string",
-          pattern: zip5Plus4Regex,
+          const: "Operator Run",
         },
       ],
     },
-    "Created At": {
+    OPERATOR_NUM: {
+      type: "string",
+      order: 3,
+    },
+    LAST_NAME: {
+      type: "string",
+      order: 4,
+    },
+    FIRST_NAME: {
+      type: "string",
+      order: 5,
+    },
+    ADDRESS_1: {
+      type: "string",
+      order: 6,
+    },
+    ADDRESS_2: {
+      type: "string",
+      order: 7,
+    },
+    ADDRESS_3: {
+      type: "string",
+      order: 8,
+    },
+    CITY: {
+      type: "string",
+      order: 9,
+    },
+    STATE: {
       type: "string",
       order: 10,
-      pattern: datePartialTimeRegex,
+      pattern: Patterns.stateCode,
+    },
+    ZIP: {
+      type: "string",
+      order: 11,
+      pattern: Patterns.fiveDigits,
+    },
+    GRE_NAME: {
+      type: "string",
+      order: 12,
+    },
+    FEIN: {
+      type: "string",
+      order: 13,
+    },
+    SSN: {
+      type: "string",
+      order: 14,
     },
   },
-  required: ["First Name", "Email"],
+  required: [
+    "MONTHEND_DATE",
+    "LOCATION_CODE",
+    "TYPE",
+    "OPERATOR_NUM",
+    "LAST_NAME",
+    "SSN",
+  ],
 };
 
 // Custom error messages
 const OperatorLookupSchemaMessages = {
   errors: {
-    "Address Zip": {
-      oneOf: "Address Zip must be Zip5/Zip9/Zip5-Zip4",
+    LOCATION_CODE: {
+      pattern: "Location must be 5 digits",
     },
   },
 };
