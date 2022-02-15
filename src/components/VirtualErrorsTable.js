@@ -18,7 +18,7 @@ const VirtualErrorsTable = (props, ref) => {
             >
               <thead>
                 <tr>
-                  <th>Row</th>
+                  <th>Row/Column</th>
                   <th>Error(s)</th>
                 </tr>
               </thead>

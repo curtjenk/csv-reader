@@ -24,7 +24,7 @@ export default function CSVReaderBigFile() {
   const [validationErrors, setValidationErrors] = useState([]);
   const [validating, setValidating] = useStateWithCallback(false, 10);
 
-  const getCsvData = (results) => {
+  const setCsvData = (results) => {
     const [headers, ...data] = results.data;
     setHeaders(headers);
     setRows(data);
@@ -89,11 +89,31 @@ export default function CSVReaderBigFile() {
 
   return (
     <>
-      <div style={{ marginLeft: "25px" }}>
-        <GenericCsvReader getCsvData={getCsvData} />
-      </div>
       <Container>
         <Row>
+          <Col md={6} className="ps-0 mt-3">
+            <GenericCsvReader uploadAccepted={setCsvData} />
+            <br />
+          </Col>
+          <Col md={4} className="ps-0 mt-3">
+            <Form.Select
+              style={{ lineHeight: "1.0" }}
+              aria-label="Select File/Schema Type"
+              onChange={(event) => setselSchemaNdx(event.target.value)}
+            >
+              <option key="-1" value="-1">
+                --Select File Type--
+              </option>
+              {SchemasIndex.map((s) => (
+                <option key={s.ndx} value={s.ndx}>
+                  {s.title}
+                </option>
+              ))}
+            </Form.Select>
+            <br />
+          </Col>
+        </Row>
+        {/* <Row>
           <Col md={4} className="ps-0">
             <Form.Select
               aria-label="Select File/Schema Type"
@@ -110,7 +130,7 @@ export default function CSVReaderBigFile() {
             </Form.Select>
             <br />
           </Col>
-        </Row>
+        </Row> */}
         <Row>
           <Col md={2}>
             <Row>

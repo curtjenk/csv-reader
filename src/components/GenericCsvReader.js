@@ -4,21 +4,21 @@ const styles = {
   csvReader: {
     display: "flex",
     flexDirection: "row",
-    marginTop: 10,
-    marginRight: 40,
-    marginBottom: 10,
-    marginLeft: 40,
+    // marginTop: 10,
+    // marginRight: 40,
+    // marginBottom: 10,
+    // marginLeft: 40,
   },
   browseFile: {
-    width: "15%",
+    // width: "15%",
     backgroundColor: "red",
   },
   acceptedFile: {
     border: "1px solid #ccc",
-    height: 30,
+    // height: 30,
     lineHeight: 1.5,
     paddingLeft: 10,
-    width: "60%",
+    width: "80%",
   },
   remove: {
     borderRadius: 0,
@@ -30,13 +30,13 @@ const styles = {
   },
 };
 
-export default function GenericCsvReader({ getCsvData }) {
+export default function GenericCsvReader({ uploadAccepted }) {
   const { CSVReader } = useCSVReader();
 
   return (
     <CSVReader
       config={{ header: false }}
-      onUploadAccepted={(results) => getCsvData(results)}
+      onUploadAccepted={(results) => uploadAccepted(results)}
     >
       {({ getRootProps, acceptedFile, ProgressBar, getRemoveFileProps }) => (
         <>
@@ -47,9 +47,9 @@ export default function GenericCsvReader({ getCsvData }) {
             <div style={styles.acceptedFile}>
               {acceptedFile && acceptedFile.name}
             </div>
-            <button {...getRemoveFileProps()} style={styles.remove}>
+            {/* <button {...getRemoveFileProps()} style={styles.remove}>
               Remove
-            </button>
+            </button> */}
           </div>
           <ProgressBar style={styles.progressBarBackgroundColor} />
         </>
