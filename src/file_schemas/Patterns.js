@@ -18,6 +18,7 @@ const dateMMDDYY_slash =
 const lastCommaFirst = /^[A-Za-z]+\s*,\s*[A-Za-z]+\s*[()A-Za-z\s.]+$/;
 
 const stateCode = /^[A-Z]{2}$/;
+const numbersOnly = /^[0-9]$/;
 
 const Patterns = {
   datePartialTime,
@@ -29,5 +30,6 @@ const Patterns = {
   dateMMDDYY_slash,
   lastCommaFirst,
   stateCode,
+  numbersOnly,
 };
 export default Patterns;

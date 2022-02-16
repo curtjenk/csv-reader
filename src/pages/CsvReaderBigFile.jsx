@@ -24,6 +24,12 @@ export default function CSVReaderBigFile() {
   const [validationErrors, setValidationErrors] = useState([]);
   const [validating, setValidating] = useStateWithCallback(false, 10);
 
+  const onChangeSchemaSel = (event) => {
+    // console.log("select changed", event.target.value);
+    setValidationErrors([]);
+    setselSchemaNdx(event.target.value);
+  };
+
   const setCsvData = (results) => {
     const [headers, ...data] = results.data;
     setHeaders(headers);
@@ -32,6 +38,7 @@ export default function CSVReaderBigFile() {
   };
 
   const validate = async () => {
+    setValidationErrors([]);
     setValidating(true, validateFlow);
   };
 
@@ -41,6 +48,7 @@ export default function CSVReaderBigFile() {
     }
     setValidating(false);
   };
+
   const validateHeaders = () => {
     const headerErrors = [];
     const { properties } = Schemas[selSchemaNdx].schema;
@@ -99,7 +107,7 @@ export default function CSVReaderBigFile() {
             <Form.Select
               style={{ lineHeight: "1.0" }}
               aria-label="Select File/Schema Type"
-              onChange={(event) => setselSchemaNdx(event.target.value)}
+              onChange={onChangeSchemaSel}
             >
               <option key="-1" value="-1">
                 --Select File Type--
@@ -113,24 +121,6 @@ export default function CSVReaderBigFile() {
             <br />
           </Col>
         </Row>
-        {/* <Row>
-          <Col md={4} className="ps-0">
-            <Form.Select
-              aria-label="Select File/Schema Type"
-              onChange={(event) => setselSchemaNdx(event.target.value)}
-            >
-              <option key="-1" value="-1">
-                --Select File Type--
-              </option>
-              {SchemasIndex.map((s) => (
-                <option key={s.ndx} value={s.ndx}>
-                  {s.title}
-                </option>
-              ))}
-            </Form.Select>
-            <br />
-          </Col>
-        </Row> */}
         <Row>
           <Col md={2}>
             <Row>

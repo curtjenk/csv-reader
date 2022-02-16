@@ -14,6 +14,7 @@ Schemas.push({
   messages: OperatorLookupSchemaMessages,
 });
 
+// Use in the dropdown to select a file type (ie, schema)
 const SchemasIndex = Schemas.map((s, ndx) => {
   return { ndx: ndx, title: s.schema.title };
 });
