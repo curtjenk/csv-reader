@@ -1,6 +1,13 @@
 import React, { useMemo, forwardRef } from "react";
 import { Virtuoso } from "react-virtuoso";
 
+const styles = {
+  thead: {
+    backgroundColor: "#d95b5b",
+    color: "black",
+  },
+};
+
 const VirtualErrorsTable = (props, ref) => {
   return (
     <Virtuoso
@@ -16,7 +23,7 @@ const VirtualErrorsTable = (props, ref) => {
                 "--virtuosoPaddingBottom": (style?.paddingBottom ?? 0) + "px",
               }}
             >
-              <thead>
+              <thead style={styles.thead}>
                 <tr>
                   <th>Row/Column</th>
                   <th>Error(s)</th>
