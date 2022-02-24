@@ -13,6 +13,7 @@ import VirtualDataTable from "../components/VirtualDataTable";
 import VirtualErrorsTable from "../components/VirtualErrorsTable";
 
 const maxErrors = 1000;
+let customFuncs = [];
 
 export default function CSVReaderBigFile() {
   const [headers, setHeaders] = useState([]);
@@ -20,14 +21,17 @@ export default function CSVReaderBigFile() {
   const [rowNum, setRowNum] = useState(-1);
   const ref = React.useRef(null);
   const errorsRef = React.useRef(null);
-  const [selSchemaNdx, setselSchemaNdx] = useState("-1");
+  const [selSchemaNdx, setselSchemaNdx] = useStateWithCallback("-1", 2);
   const [validationErrors, setValidationErrors] = useState([]);
   const [validating, setValidating] = useStateWithCallback(false, 10);
 
   const onChangeSchemaSel = (event) => {
     // console.log("select changed", event.target.value);
     setValidationErrors([]);
-    setselSchemaNdx(event.target.value);
+    setselSchemaNdx(event.target.value, (schemaNdx) => {
+      console.log("ndx = ", schemaNdx);
+      customFuncs = getCustomFuncs(schemaNdx);
+    });
   };
 
   const setCsvData = (results) => {
@@ -68,6 +72,35 @@ export default function CSVReaderBigFile() {
     return true;
   };
 
+  const getCustomFuncs = (schemaNdx) => {
+    const { properties } = Schemas[schemaNdx].schema;
+    let customFuncs = [];
+    Object.keys(properties).forEach((key) => {
+      const prop = properties[key];
+      if (prop.custom && typeof prop.custom === "function") {
+        customFuncs.push({
+          order: prop.order,
+          header: headers[prop.order],
+          func: prop.custom,
+        });
+      }
+    });
+    return customFuncs;
+  };
+
+  const validateCustom = (rowNdx, colArray) => {
+    const dataErrors = [];
+    for (let i = 0; i < customFuncs.length; i++) {
+      const { msg, isValid } = customFuncs[i].func(
+        colArray[customFuncs[i].order]
+      );
+      if (!isValid) {
+        dataErrors.push(`${customFuncs[i].header} : ${msg}`);
+      }
+    }
+    return dataErrors;
+  };
+
   const validateData = async () => {
     const dataErrors = [];
     const yupschema = convertToYup(
@@ -76,14 +109,23 @@ export default function CSVReaderBigFile() {
     );
     for (let i = 0; i < rows.length; i++) {
       if (dataErrors.length > maxErrors) break;
+      let iterationErrors = [];
+      const customErrors = validateCustom(i, rows[i]);
+      if (customErrors.length > 0) {
+        iterationErrors.push(...customErrors);
+      }
       try {
         await yupschema.validate(convertRowToJson(rows[i]), {
           abortEarly: false,
         });
       } catch (error) {
-        dataErrors.push([i, error.errors.join("; ")]);
+        iterationErrors.push(...error.errors);
+      }
+      if (iterationErrors.length > 0) {
+        dataErrors.push([i, iterationErrors.join("; ")]);
       }
     }
+
     setValidationErrors([...validationErrors, ...dataErrors]);
   };
 

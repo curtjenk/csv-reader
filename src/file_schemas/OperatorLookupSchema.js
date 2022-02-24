@@ -1,5 +1,10 @@
 import Patterns from "./Patterns";
+import { memoize } from "../customHooks/memoize";
 
+const customFunc = memoize((message) => {
+  // console.log("customFunc", message);
+  return { msg: "contains invalid value", isValid: false };
+});
 // "order" is not part of the draft-07 spec
 const OperatorLookupSchema = {
   type: "object",
@@ -20,6 +25,7 @@ const OperatorLookupSchema = {
     TYPE: {
       type: "string",
       order: 2,
+      custom: customFunc,
       oneOf: [
         {
           type: "string",
